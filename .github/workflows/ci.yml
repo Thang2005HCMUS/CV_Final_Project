@@ -22,16 +22,21 @@ jobs:
       run: |
         python -m pip install --upgrade pip
         if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
+        pip install flake8 pytest
 
     - name: Lint with flake8
       run: |
-        pip install flake8
-        # Dừng build nếu có lỗi cú pháp hoặc sai định dạng nghiêm trọng
-        flake8 . --count --select=E9,F63,F7,F82 --show-source --statistics
-        # Cảnh báo các lỗi khác nhưng không dừng build
-        flake8 . --count --exit-zero --max-complexity=10 --max-line-length=127 --statistics
+        # Kiểm tra code trong thư mục src
+        flake8 src/ --count --select=E9,F63,F7,F82 --show-source --statistics
 
     - name: Test with pytest
       run: |
-        pip install pytest
-        pytest
+        # Chạy test trong thư mục tests và xuất ra file results.xml
+        pytest tests/ --junitxml=results.xml
+
+    - name: Upload Test Results
+      uses: actions/upload-artifact@v4
+      if: always() # Luôn chạy bước này kể cả khi test thất bại
+      with:
+        name: test-results
+        path: results.xml
